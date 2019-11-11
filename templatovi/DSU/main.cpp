@@ -2,7 +2,7 @@
 using namespace std;
 const int N=2e5+5;
 int p[N];
-int Find(int x){return x==p[x]?x:Find(p[x]);}
+int Find(int x){return x==p[x]?x:p[x]=Find(p[x]);}
 void Union(int x,int y){x=Find(x);y=Find(y);p[x]=y;}
 int main()
 {
