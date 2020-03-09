@@ -3,6 +3,7 @@
 #define pb push_back
 #define sz(x) (int)(x).size()
 #define mp make_pair
+#define pii pair<int,int>
 #define f first
 #define s second
 #define all(x) x.begin(), x.end()
