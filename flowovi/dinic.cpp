@@ -15,10 +15,9 @@ using namespace std;
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 const int N=2e3+5;
 const int oo=1e9+7;
-int n,m,sq,dep[N],deg[N],par[N];
+int n,m,sq,dep[N],deg[N],par[N],level[N];
 bool vis[N];
-vector<vector<int>>capacity;
-vector<vector<int>>g;
+vector<vector<int>>g,capacity,flow;
 template<class T1, class T2> ostream& operator<<(ostream& os, const pair<T1,T2>& a) { os << '{' << a.f << ", " << a.s << '}'; return os; }
 template<class T> ostream& operator<<(ostream& os, const vector<T>& a){os << '{';for(int i=0;i<sz(a);i++){if(i>0&&i<sz(a))os << ", ";os << a[i];}os<<'}';return os;}
 template<class T> ostream& operator<<(ostream& os, const deque<T>& a){os << '{';for(int i=0;i<sz(a);i++){if(i>0&&i<sz(a))os << ", ";os << a[i];}os<<'}';return os;}
@@ -27,42 +26,51 @@ template<class T> ostream& operator<<(ostream& os, const set<T,greater<T> >& a) 
 template<class T> ostream& operator<<(ostream& os, const multiset<T>& a) {os << '{';int i=0;for(auto p:a){if(i>0&&i<sz(a))os << ", ";os << p;i++;}os << '}';return os;}
 template<class T> ostream& operator<<(ostream& os, const multiset<T,greater<T> >& a) {os << '{';int i=0;for(auto p:a){if(i>0&&i<sz(a))os << ", ";os << p;i++;}os << '}';return os;}
 template<class T1,class T2> ostream& operator<<(ostream& os, const map<T1,T2>& a) {os << '{';int i=0;for(auto p:a){if(i>0&&i<sz(a))os << ", ";os << p;i++;}os << '}';return os;}
-int bfs(int source,int sink,vector<int>&parent){
-    fill(parent.begin(),parent.end(),-1);
-    parent[source]=-2;
-    queue<pii>q;
-    q.push(mp(source,oo));
+
+bool BFSlevels(int source,int sink){
+    queue<int>q;
+    memset(level,-1,sizeof(level));
+    q.push(source);
+    level[source]=0;
     while(!q.empty()){
-        int curr=q.front().f,flow=q.front().s;
+        int x=q.front();
         q.pop();
-        for(auto next:g[curr]){
-            if(parent[next]==-1&&capacity[curr][next]){
-                parent[next]=curr;
-                int new_flow=min(flow,capacity[curr][next]);
-                if(next==sink){
-                    return new_flow;
-                }
-                q.push(mp(next,new_flow));
+        for(auto y:g[x]){
+            if(level[y]==-1&&flow[x][y]<capacity[x][y]){
+                level[y]=level[x]+1;
+                q.push(y);
+            }
+        }
+    }
+    return level[sink]>-1;
+}
+int sendFlow(int x,int sink,int start[],int flo=oo){
+    if(x==sink){
+        return flo;
+    }
+    for(;start[x]<g[x].size();start[x]++){
+        int y=g[x][start[x]];
+        if(level[y]==level[x]+1&&flow[x][y]<capacity[x][y]){
+            int currFlow=min(flo,capacity[x][y]-flow[x][y]);
+            int tempFlow=sendFlow(y,sink,start,currFlow);
+            if(tempFlow>0){
+                flow[x][y]+=tempFlow;
+                flow[y][x]-=tempFlow;
+                return tempFlow;
             }
         }
     }
     return 0;
 }
-int maxFlow(int source,int sink){
-    int flow=0;
-    vector<int>parent(n+2);
-    int newFlow;
-    while(newFlow=bfs(source,sink,parent)){
-        flow+=newFlow;
-        int curr=sink;
-        while(curr!=source){
-            int prev=parent[curr];
-            capacity[prev][curr]-=newFlow;
-            capacity[curr][prev]+=newFlow;
-            curr=prev;
+int dinicMaxFlow(int source,int sink){
+    int total=0;
+    while(BFSlevels(source,sink)){
+        int *start=new int[N];
+        while(int flo=sendFlow(source,sink,start)){
+            total+=flo;
         }
     }
-    return flow;
+    return total;
 }
 int main(){
     //freopen("in.txt","r",stdin);
@@ -72,8 +80,10 @@ int main(){
     cin>>n>>m;
     g.resize(n+2);
     capacity.resize(n+2);
+    flow.resize(n+2);
     for(int i=0;i<=n+1;i++){
         capacity[i].resize(n+2);
+        flow[i].resize(n+2);
     }
     for(int i=1;i<=m;i++){
         int x,y,w;
@@ -88,7 +98,7 @@ int main(){
     g[n+1].pb(n);g[n].pb(n+1);
     capacity[0][1]=oo;
     capacity[n][n+1]=oo;
-    int flow=maxFlow(0,n+1);
+    int flow=dinicMaxFlow(0,n+1);
     cout<<flow<<"\n";
     return 0;
 }
