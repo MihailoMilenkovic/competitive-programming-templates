@@ -1,11 +1,4 @@
-// Problem : G. Autocompletion
-// Contest : Educational Codeforces Round 83 (Rated for Div. 2)
-// URL : https://codeforces.com/contest/1312/problem/G
-// Memory Limit : 512 MB
-// Time Limit : 7000 ms
-// Powered by CP Editor (https://github.com/cpeditor/cp-editor)
- 
-#include <bits/stdc++.h>
+ #include <bits/stdc++.h>
  
 #define ll long long
 #define pb push_back
@@ -30,73 +23,44 @@ template<class T> ostream& operator<<(ostream& os, const multiset<T,greater<T> >
 template<class T1,class T2> ostream& operator<<(ostream& os, const map<T1,T2>& a) {os << '{';int i=0;for(auto p:a){if(i>0&&i<sz(a))os << ", ";os << p;i++;}os << '}';return os;}
  
 struct node{
-	vector<int> nxt;
-	int cnt;
-	int endId;
-	vector<int> dp;
-	node(){
-		nxt.resize(26,-1);
-		cnt=0;
-		endId=-1;
-		dp.resize(2);
+	map<char,node>children;
+	void insert(string s,int i=0){
+		if(i==s.size())return;
+		children[s[i]].insert(s,i+1);
 	}
-}em;
-vector<node> trie(1);
-const int N=1e6+1;
-vector<int> ans(N);
-void init(int tr){
-	for(int i=0;i<26;i++)
-		if(trie[tr].nxt[i]!=-1)
-			init(trie[tr].nxt[i]),trie[tr].cnt+=trie[trie[tr].nxt[i]].cnt;
-}
-vector<char> trStr;
-void doDp(int tr){
-	//cout << trStr << trie[tr].dp << endl;
-	if(trie[tr].endId!=-1){
-		ans[trie[tr].endId]=min(trie[tr].dp[0],trie[tr].dp[1]);
+	void traverse(string curr=""){
+		cout<<curr<<"\n";
+		//D(wins());
+		for(auto x:children){
+			x.s.traverse(curr+x.f);
+		}
 	}
-	int cnt=0;
-	for(int i=0;i<26;i++){
-		if(trie[tr].nxt[i]==-1)
-			continue;
-		int sl=trie[tr].nxt[i];
-		trie[sl].dp[0]=trie[sl].dp[1]=INT_MAX;
-		trie[sl].dp[0]=trie[tr].dp[0]+1;
-		if(trie[tr].endId!=-1)
-			trie[sl].dp[0]=min(trie[sl].dp[0],trie[tr].dp[1]+1);
-		trie[sl].dp[1]=min(trie[tr].dp[0]+cnt+1,trie[tr].dp[1]+cnt);
-		if(trie[tr].endId!=-1)
-			trie[sl].dp[1]++;
-		trStr.pb(i+'a');
-		doDp(sl);
-		trStr.pop_back();
-		cnt+=trie[sl].cnt;
+	bool wins(bool fi){
+		if(children.size()== 0)return fi;
+		for(auto ch:children){
+			if(!ch.s.wins(fi))return true;
+		}
+		return false;
 	}
-}
+};
+
 int main()
 {
-	int n;
-	cin >> n;
-	for(int i=0;i<n;i++){
-		int p;
-		char c;
-		cin >> p >> c;
-		int tr=c-'a';
-		trie.pb(em);
-		trie[p].nxt[tr]=trie.size()-1;
+	//freopen("in.txt","r",stdin);
+	node root;
+	int n,k;
+	cin>>n>>k;
+	for(int i=1;i<=n;i++){
+		string inp;
+		cin>>inp;
+		root.insert(inp);
 	}
-	int k;
-	cin >> k;
-	for(int i=0;i<k;i++){
-		int p;
-		cin >> p;
-		trie[p].cnt++;
-		trie[p].endId=i;
+	//root.traverse();
+	//D(root.wins());
+	if(root.wins(false)&&(root.wins(true)||k%2==1)){
+		cout<<"First\n";
+	}else{
+		cout<<"Second\n";
 	}
-	init(0);
-	trie[0].endId=k;
-	doDp(0);
-	for(int i=0;i<k;i++)
-		printf("%i ",ans[i]);
 	return 0;
 }
